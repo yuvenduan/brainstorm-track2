@@ -14,14 +14,16 @@ interface NeuralCanvasProps {
   currentNeuralData: number[] | null;
 }
 
+
 export default function NeuralCanvas({ 
-  channelsCoords, 
+  channelsCoords,
   gridSize, 
   valueToColor,
   currentNeuralData
 }: NeuralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const channelSize = Math.max(8, Math.floor(500 / gridSize));
+  const canvasSize = 300;
+  const channelSize = (canvasSize*0.7) / gridSize;
 
   const getChannelPosition = (coord: ChannelCoord) => {
     const canvas = canvasRef.current;
@@ -46,12 +48,6 @@ export default function NeuralCanvas({
     // Clear canvas
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Test: draw a simple red dot in the center to verify canvas is working
-    ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, 10, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
 
     // Draw each channel
     console.log(`Drawing ${Math.min(channelsCoords.length, currentNeuralData.length)} channels`);
@@ -80,8 +76,8 @@ export default function NeuralCanvas({
   return (
     <canvas
       ref={canvasRef}
-      width={600}
-      height={600}
+      width={canvasSize}
+      height={canvasSize}
       className="bg-primary-bg rounded-lg border border-border"
     />
   );
