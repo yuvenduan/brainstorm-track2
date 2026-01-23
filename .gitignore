@@ -51,3 +51,9 @@ data/
 Thumbs.db
 
 # UV - uv.lock should be committed for reproducibility
+
+
+
+/app/.next
+/app/node_modules
+/app/next-env.d.ts
