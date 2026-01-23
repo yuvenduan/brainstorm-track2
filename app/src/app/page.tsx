@@ -285,6 +285,7 @@ export default function Home() {
             channelCount={channelCount}
           />
         </header>
+        */}
 
         <main className="flex-1 flex justify-center items-center py-5">
           <div className="flex gap-5 bg-primary-secondary p-6 rounded-xl border border-border shadow-lg shadow-black/40">
