@@ -273,6 +273,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-primary-bg">
       <div className="flex flex-col min-h-screen max-w-6xl mx-auto p-6 w-full">
+        {/*
         <header className="flex justify-between items-center pb-5 border-b border-border mb-6">
           <h1 className="text-xl font-semibold bg-gradient-to-r from-text-primary to-accent-primary bg-clip-text text-transparent">
             Neural Activity
