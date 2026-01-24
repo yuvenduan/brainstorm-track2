@@ -265,9 +265,9 @@ function drawCenterOfMassArrow(com) {
     const comY = com.row / (gridSize - 1) * plotSize + padding;
 
     // Draw arrow
-    ctx.strokeStyle = '#FFEB3B';  // Bright yellow
-    ctx.fillStyle = '#FFEB3B';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#FFF59D';  // Pale yellow
+    ctx.fillStyle = '#FFF59D';
+    ctx.lineWidth = 6;
 
     // Arrow line
     ctx.beginPath();

@@ -127,7 +127,7 @@ class GroupRealtimeProcessor:
         self.center_of_mass_history = []  # List of (time, row, col) tuples
         self.current_com = None  # Current center of mass (row, col)
         self.ema_com = None  # EMA smoothed center of mass (row, col)
-        self.com_ema_frames = 50  # Number of frames for EMA smoothing
+        self.com_ema_frames = 20  # Number of frames for EMA smoothing
         self.com_alpha = 2.0 / (self.com_ema_frames + 1)  # EMA smoothing factor
 
     # =========================================================================
