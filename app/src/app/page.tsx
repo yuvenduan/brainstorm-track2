@@ -284,7 +284,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-primary-bg">
+    <main className="min-h-screen bg-white">
       <div className="flex flex-col min-h-screen max-w-6xl mx-auto p-6 w-full">
         {/*
         <header className="flex justify-between items-center pb-5 border-b border-border mb-6">
@@ -301,46 +301,47 @@ export default function Home() {
         </header>
         */}
 
-        <div className="absolute z-50 left-0 top-0">
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-center py-5">
-            {/* Neural Canvas */}
-            <div className="flex gap-5">
-              <NeuralCanvas
-                  channelsCoords={channelsCoords}
-                  gridSize={gridSize}
-                  valueToColor={valueToColor}
-                  currentNeuralData={currentNeuralData}
-              />
-              {/* right meter */}
-              <div className="flex gap-2 py-2">
-                <div className="w-4 rounded bg-gradient-to-b from-[#fcfdbf] via-[#feca8d] via-[#f1605d] via-[#b73779] via-[#721f81] to-[#2c115f] to-[#000004]"></div>
-                <div className="flex flex-col justify-between text-xs text-text-secondary">
-                  <span>+0.02</span>
-                  <span>0.0</span>
-                  <span>-0.02</span>
+        <div className="flex bg-gray-200">
+          {/* Brain Visualization */}
+          <div className="flex flex-col items-center bg-white p-6 rounded-xl">
+            <h2 className="text-lg font-semibold text-primary-bg mb-4 text-center">Brain Scan Visualization</h2>
+            <br/>
+            <CortexCanvas
+              brainData={convertNeuralToBrainData()}
+              gridSize={gridSize}
+              updateThrottle={200} // Update every 200ms when not scanning
+            />
+          </div>
+
+          <div className="flex flex-col items-center bg-gray-200">
+            <div className="z-50">
+              <div className="flex flex-col md:flex-row gap-6 justify-center items-center py-5">
+                {/* Neural Canvas */}
+                <div className="flex gap-5">
+                  <NeuralCanvas
+                      channelsCoords={channelsCoords}
+                      gridSize={gridSize}
+                      valueToColor={valueToColor}
+                      currentNeuralData={currentNeuralData}
+                  />
+                  {/* right meter */}
+                  <div className="flex gap-2 py-2">
+                    <div className="w-4 rounded bg-gradient-to-b from-[#fcfdbf] via-[#feca8d] via-[#f1605d] via-[#b73779] via-[#721f81] to-[#2c115f] to-[#000004]"></div>
+                    <div className="flex flex-col justify-between text-xs text-text-secondary">
+                      <span>+0.02</span>
+                      <span>0.0</span>
+                      <span>-0.02</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+            <ConnectionControls
+                isConnected={isConnected}
+                onConnect={connect}
+            />
           </div>
         </div>
-
-        {/* Brain Visualization */}
-        <div className="flex flex-col items-center bg-primary-secondary p-6 rounded-xl border border-border shadow-lg shadow-black/40">
-          <h2 className="text-lg font-semibold text-text-primary mb-4 text-center">Brain Scan Visualization</h2>
-          <br/>
-          <CortexCanvas 
-            brainData={convertNeuralToBrainData()}
-            gridSize={gridSize}
-            updateThrottle={200} // Update every 200ms when not scanning
-          />
-        </div>
-
-        <footer className="pt-5 border-t border-border mt-6">
-          <ConnectionControls 
-            isConnected={isConnected}
-            onConnect={connect}
-          />
-        </footer>
       </div>
     </main>
   );

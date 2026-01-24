@@ -31,7 +31,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
   const isScanning = true; //always scan
   const [lastRenderTime, setLastRenderTime] = useState(0);
 
-  const scannerSize = 300;
+  const scannerSize = 600;
   const cellSize = 17;
   const canvasCenter = canvasSize/2;
 
@@ -122,7 +122,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     ctx.beginPath();
     const x = canvasCenter + (col - gridSize/2) * cellSize;
     const y = canvasCenter + (row - gridSize/2) * cellSize;
-    ctx.roundRect(x, y, cellSize-5, cellSize-5, 6);
+    ctx.roundRect(x, y, cellSize-4, cellSize-4, 4);
     ctx.fill();
   };
 
@@ -173,7 +173,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     
     // Draw brain background with proper aspect ratio
     if (brainImage) {
-      ctx.globalAlpha = 0.3;
+      ctx.globalAlpha = 0.6;
       
       // Calculate proper scaling to fit within oval while preserving aspect ratio
       const brainAspectRatio = brainImage.width / brainImage.height;
@@ -216,6 +216,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     const currentGrid = createUpdatedGrid(brainData);
     drawHeatmap(currentGrid);
 
+    /*
     // Draw scanner if loaded and scanning
     if (scannerImage && isScanning) {
       const scannerHeight = scannerSize;
@@ -232,15 +233,16 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
       );
       ctx.restore();
 
-      /*
+
       // Draw scanning indicator
       ctx.beginPath();
       ctx.arc(scannerPos.x, scannerPos.y, 5, 0, Math.PI * 2);
       ctx.fillStyle = '#00ff00';
       ctx.fill();
 
-       */
+
     }
+    */
   };
 
   // Animation loop - optimized to only render when data changes
@@ -286,11 +288,13 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
         onClick={handleClick}
         className="rounded-lg cursor-crosshair"
       />
+      {/*
       <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm">
         <div>Scanner: {isScanning ? 'ACTIVE' : 'INACTIVE'}</div>
         <div>Click to toggle scanning mode</div>
         <div>Move mouse to position scanner</div>
       </div>
+      */}
     </div>
   );
 }

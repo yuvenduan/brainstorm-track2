@@ -29,7 +29,7 @@ export default function NeuralCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     
-    const padding = 30;
+    const padding = 15;
     const plotSize = Math.min(canvas.width, canvas.height) - 2 * padding;
     
     // coords are 1-indexed, convert to 0-indexed
