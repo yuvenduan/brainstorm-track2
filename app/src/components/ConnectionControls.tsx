@@ -16,26 +16,8 @@ export default function ConnectionControls({ isConnected, onConnect }: Connectio
     onConnect(serverUrl);
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    }
-  };
-
   return (
     <div className="flex items-center gap-3 justify-center">
-      <label htmlFor="server-url" className="text-sm text-text-secondary">
-        Server URL:
-      </label>
-      <input
-        ref={inputRef}
-        type="text"
-        id="server-url"
-        value={serverUrl}
-        onChange={(e) => setServerUrl(e.target.value)}
-        onKeyPress={handleKeyPress}
-        className="bg-primary-tertiary border border-border rounded-lg px-3.5 py-2.5 text-text-primary font-mono text-sm w-72 transition-all focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-glow"
-      />
       <button
         onClick={handleSubmit}
         className={cn(

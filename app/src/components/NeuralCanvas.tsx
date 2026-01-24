@@ -17,12 +17,12 @@ interface NeuralCanvasProps {
 
 export default function NeuralCanvas({ 
   channelsCoords,
-  gridSize, 
+  gridSize,
   valueToColor,
   currentNeuralData
 }: NeuralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const canvasSize = 300;
+  const canvasSize = 400;
   const channelSize = (canvasSize*0.7) / gridSize;
 
   const getChannelPosition = (coord: ChannelCoord) => {

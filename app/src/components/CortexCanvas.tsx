@@ -31,7 +31,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
   const isScanning = true; //always scan
   const [lastRenderTime, setLastRenderTime] = useState(0);
 
-  const scannerSize = 600;
+  const scannerSize = 300;
   const cellSize = 17;
   const canvasCenter = canvasSize/2;
 
@@ -69,7 +69,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
         
         // Load scanner image
         const scannerImg = new Image();
-        scannerImg.src = '/array.png';
+        scannerImg.src = '/arrayhead.png';
         scannerImg.onload = () => {
           console.log('Scanner image loaded:', scannerImg.width, 'x', scannerImg.height);
           setScannerImage(scannerImg);
@@ -82,7 +82,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
         brainImg.onload = () => setBrainImage(brainImg);
 
         const scannerImg = new Image();
-        scannerImg.src = '/array.png';
+        scannerImg.src = '/arrayhead.png';
         scannerImg.onload = () => setScannerImage(scannerImg);
       }
     };
@@ -173,7 +173,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     
     // Draw brain background with proper aspect ratio
     if (brainImage) {
-      ctx.globalAlpha = 0.6;
+      ctx.globalAlpha = 0.8;
       
       // Calculate proper scaling to fit within oval while preserving aspect ratio
       const brainAspectRatio = brainImage.width / brainImage.height;
@@ -214,16 +214,16 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     //set brain oval image global size for heatmap coverage size
 
     const currentGrid = createUpdatedGrid(brainData);
-    drawHeatmap(currentGrid);
+    //drawHeatmap(currentGrid);
 
-    /*
+
     // Draw scanner if loaded and scanning
     if (scannerImage && isScanning) {
       const scannerHeight = scannerSize;
       const scannerWidth = scannerSize;
       
       ctx.save();
-      ctx.globalAlpha = 0.8;
+      ctx.globalAlpha = 1;
       ctx.drawImage(
         scannerImage,
         scannerPos.x - scannerWidth / 2,
@@ -234,15 +234,15 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
       ctx.restore();
 
 
-      // Draw scanning indicator
-      ctx.beginPath();
-      ctx.arc(scannerPos.x, scannerPos.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#00ff00';
-      ctx.fill();
+      // // Draw scanning indicator
+      // ctx.beginPath();
+      // ctx.arc(scannerPos.x, scannerPos.y, 5, 0, Math.PI * 2);
+      // ctx.fillStyle = '#00ff00';
+      // ctx.fill();
 
 
     }
-    */
+
   };
 
   // Animation loop - optimized to only render when data changes
@@ -286,7 +286,7 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
         height={canvasSize}
         onMouseMove={handleMouseMove}
         onClick={handleClick}
-        className="rounded-lg cursor-crosshair"
+        className="rounded-lg cursor-none"
       />
       {/*
       <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm">

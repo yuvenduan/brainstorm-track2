@@ -21,6 +21,14 @@ interface WebSocketMessage {
   fs?: number;
 }
 
+
+
+const ws_url = "ws://localhost:8765"; //8766
+
+
+
+
+
 // Generate magma colormap
 const generateMagmaColormap = (): [number, number, number][] => {
   const magmaData = [
@@ -125,7 +133,7 @@ export default function Home() {
   const [fps, setFps] = useState(0);
   const [channelCount, setChannelCount] = useState(0);
   const [currentNeuralData, setCurrentNeuralData] = useState<number[] | null>(null);
-  
+
   const sampleBufferRef = useRef<number[][]>([]);
   const timeBufferRef = useRef<number[]>([]);
   const lastFrameTimeRef = useRef<number>(0);
@@ -138,7 +146,7 @@ export default function Home() {
   // Convert neural data to brain activity data for CortexCanvas
   const convertNeuralToBrainData = () => {
     if (!currentNeuralData || !channelsCoords) return null;
-    
+
     return currentNeuralData.map((value, index) => ({
       position: {
         x: channelsCoords[index]?.x || 0,
@@ -175,8 +183,8 @@ export default function Home() {
     }
 
     // Use the last timestamp
-    const frameTime = timeBufferRef.current.length > 0 
-      ? timeBufferRef.current[timeBufferRef.current.length - 1] 
+    const frameTime = timeBufferRef.current.length > 0
+      ? timeBufferRef.current[timeBufferRef.current.length - 1]
       : 0.0;
 
     // Clear buffers
@@ -200,8 +208,8 @@ export default function Home() {
     setStatusText('Connecting...');
 
     try {
-      const websocket = new WebSocket(url);
-      
+      const websocket = new WebSocket(ws_url);
+
       websocket.onopen = () => {
         console.log('WebSocket connected');
         setWs(websocket);
@@ -223,7 +231,7 @@ export default function Home() {
             if (data.grid_size) {
               setGridSize(data.grid_size);
             }
-            
+
             console.log(`Initialized with ${data.channels_coords?.length || 0} channels, grid size ${data.grid_size}`);
 
             // Clear buffers on init
@@ -283,15 +291,34 @@ export default function Home() {
     }
   };
 
+  useEffect(()=>{
+    document.addEventListener("keypress", function(event){
+      if (event.key==="ArrowUp"){
+
+      }
+      if (event.key==="ArrowDown"){
+
+      }
+      if (event.key==="ArrowLeft"){
+
+      }
+      if (event.key==="ArrowRight"){
+
+      }
+    })
+  })
+
   return (
-    <main className="min-h-screen bg-white">
-      <div className="flex flex-col min-h-screen max-w-6xl mx-auto p-6 w-full">
+    <main className="w-screen h-screen bg-white">
+      <div className="flex flex-col items-center w-full h-full pt-6" style={{
+        boxShadow: "0px 0px 70px 0px red inset"
+      }}>
         {/*
         <header className="flex justify-between items-center pb-5 border-b border-border mb-6">
           <h1 className="text-xl font-semibold bg-gradient-to-r from-text-primary to-accent-primary bg-clip-text text-transparent">
             Neural Activity
           </h1>
-          <StatusBar 
+          <StatusBar
             status={connectionStatus}
             statusText={statusText}
             currentTime={currentTime}
@@ -301,9 +328,9 @@ export default function Home() {
         </header>
         */}
 
-        <div className="flex bg-gray-200">
+        <div className="flex ">
           {/* Brain Visualization */}
-          <div className="flex flex-col items-center bg-white p-6 rounded-xl">
+          <div className="flex flex-col items-center  p-6 rounded-xl">
             <h2 className="text-lg font-semibold text-primary-bg mb-4 text-center">Brain Scan Visualization</h2>
             <br/>
             <CortexCanvas
@@ -313,7 +340,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="flex flex-col items-center bg-gray-200">
+          <div className="flex flex-col items-center bg-gray-200 p-6 rounded-lg">
             <div className="z-50">
               <div className="flex flex-col md:flex-row gap-6 justify-center items-center py-5">
                 {/* Neural Canvas */}
