@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { valueToColor } from '@/app/page';
 
 interface ScannerPosition {
   x: number;
@@ -18,13 +19,28 @@ interface CortexCanvasProps {
   updateThrottle?: number; // milliseconds between updates
 }
 
+
+
+const canvasSize = 600;
+
 export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100 }: CortexCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [brainImage, setBrainImage] = useState<HTMLImageElement | null>(null);
   const [scannerImage, setScannerImage] = useState<HTMLImageElement | null>(null);
   const [scannerPos, setScannerPos] = useState<ScannerPosition>({ x: 100, y: 100 });
-  const [isScanning, setIsScanning] = useState(false);
+  const isScanning = true; //always scan
   const [lastRenderTime, setLastRenderTime] = useState(0);
+
+  const scannerSize = 300;
+  const cellSize = 50;
+  const canvasCenter = canvasSize/2;
+  const grid: number[][] = [];
+  for (let i=0;i<gridSize;i++){
+    grid.push([]);
+    for (let j=0;j<gridSize;j++){
+      grid[i].push(0.0);
+    }
+  }
 
   // Load images
   useEffect(() => {
@@ -74,8 +90,38 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
 
   // Handle mouse click to toggle scanning
   const handleClick = () => {
-    setIsScanning(!isScanning);
+    //setIsScanning(!isScanning); always be scanning
   };
+
+  const colorScale = (confidence: number) => {
+    //return rgb based on a confidence input
+    // let r=0;
+    // let g=0;
+    // let b=0;
+    // return `rgb(${r}, ${g}, ${b})`;
+    return valueToColor(confidence);
+  }
+
+  const drawCell = (ctx: CanvasRenderingContext2D, row: number, col: number, color:string) => {
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(canvasCenter + (col - gridSize/2)*cellSize, canvasCenter + (row - gridSize/2)*cellSize, cellSize, cellSize, 3);
+    ctx.clip();
+  }
+
+  const drawHeatmap = () => {
+    //this fires on grid update
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    for (let row=0;row<gridSize;row++){
+      for (let col=0;col<gridSize;col++){
+        drawCell(ctx, row, col, colorScale(grid[row][col]));
+      }
+    }
+  }
 
   // Render the brain scan visualization
   const renderBrainScan = () => {
@@ -96,8 +142,8 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     // Create vertical oval clipping path
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const ovalWidth = canvas.width * 0.35;
-    const ovalHeight = canvas.height * 0.45;
+    const ovalWidth = canvas.width * 0.50;
+    const ovalHeight = canvas.height * 0.50;
     
     // Save context state
     ctx.save();
@@ -147,47 +193,14 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     // Restore context state (removes clipping)
     ctx.restore();
 
-    // Heatmap drawing logic is available but commented out
-    // Uncomment this section to enable heatmap visualization
-    /*
-    if (brainData && brainData.length > 0) {
-      brainData.forEach(data => {
-        const { position, intensity } = data;
-        const x = (position.x / gridSize) * canvas.width;
-        const y = (position.y / gridSize) * canvas.height;
-        
-        // Simplified heatmap color calculation
-        const clampedIntensity = Math.min(Math.max(intensity, 0), 1);
-        const radius = 7;
-        
-        // Pre-calculated heatmap colors
-        let r, g, b;
-        if (clampedIntensity < 0.33) {
-          r = 0;
-          g = Math.floor(255 * (clampedIntensity * 3));
-          b = Math.floor(255 * (1 - clampedIntensity * 3));
-        } else if (clampedIntensity < 0.66) {
-          r = Math.floor(255 * ((clampedIntensity - 0.33) * 3));
-          g = 255;
-          b = 0;
-        } else {
-          r = 255;
-          g = Math.floor(255 * (1 - (clampedIntensity - 0.66) * 3));
-          b = 0;
-        }
+    //set brain oval image global size for heatmap coverage size
 
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.6)`;
-        ctx.fill();
-      });
-    }
-    */
+    drawHeatmap();
 
     // Draw scanner if loaded and scanning
     if (scannerImage && isScanning) {
-      let scannerHeight;
-      const scannerWidth = scannerHeight = 160;
+      const scannerHeight = scannerSize;
+      const scannerWidth = scannerSize;
       
       ctx.save();
       ctx.globalAlpha = 0.8;
@@ -241,11 +254,11 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     <div className="relative">
       <canvas
         ref={canvasRef}
-        width={600}
-        height={600}
+        width={canvasSize}
+        height={canvasSize}
         onMouseMove={handleMouseMove}
         onClick={handleClick}
-        className="bg-gray-900 rounded-lg cursor-crosshair"
+        className="rounded-lg cursor-crosshair"
       />
       <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm">
         <div>Scanner: {isScanning ? 'ACTIVE' : 'INACTIVE'}</div>
