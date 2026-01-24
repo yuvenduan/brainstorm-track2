@@ -32,15 +32,28 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
   const [lastRenderTime, setLastRenderTime] = useState(0);
 
   const scannerSize = 300;
-  const cellSize = 50;
+  const cellSize = 17;
   const canvasCenter = canvasSize/2;
-  const grid: number[][] = [];
-  for (let i=0;i<gridSize;i++){
-    grid.push([]);
-    for (let j=0;j<gridSize;j++){
-      grid[i].push(0.0);
+
+  const createUpdatedGrid = (currentBrainData: BrainActivityData[] | null) => {
+    // Always create fresh grid - this is the React way!
+    const newGrid: number[][] = Array(gridSize).fill(null).map(() =>
+        Array(gridSize).fill(0.0)
+    );
+
+    if (currentBrainData && currentBrainData.length > 0) {
+      currentBrainData.forEach(dataPoint => {
+        const col = Math.floor((dataPoint.position.x + 1) / 2 * gridSize);
+        const row = Math.floor((dataPoint.position.y + 1) / 2 * gridSize);
+
+        if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+          newGrid[row][col] = dataPoint.intensity; // 0-1 confidence score
+        }
+      });
     }
-  }
+
+    return newGrid;
+  };
 
   // Load images
   useEffect(() => {
@@ -102,15 +115,19 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     return valueToColor(confidence);
   }
 
-  const drawCell = (ctx: CanvasRenderingContext2D, row: number, col: number, color:string) => {
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.roundRect(canvasCenter + (col - gridSize/2)*cellSize, canvasCenter + (row - gridSize/2)*cellSize, cellSize, cellSize, 3);
-    ctx.clip();
-  }
+  const drawCell = (ctx: CanvasRenderingContext2D, row: number, col: number, color: string) => {
+    if (color === 'rgb(1, 1, 2)') return;
 
-  const drawHeatmap = () => {
+    ctx.fillStyle = color.substring(0,color.length-2)+", 0.4)";
+    ctx.beginPath();
+    const x = canvasCenter + (col - gridSize/2) * cellSize;
+    const y = canvasCenter + (row - gridSize/2) * cellSize;
+    ctx.roundRect(x, y, cellSize-5, cellSize-5, 6);
+    ctx.fill();
+  };
+
+  const drawHeatmap = (grid: number[][]) => {
+    //1w
     //this fires on grid update
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -150,7 +167,8 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
     
     // Create clipping mask with vertical oval
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY, ovalWidth, ovalHeight, 0, 0, Math.PI * 2);
+    ctx.roundRect(centerX-ovalWidth, centerY-ovalHeight, ovalWidth*2, ovalHeight*2, 80);
+    // ctx.ellipse(centerX, centerY, ovalWidth, ovalHeight, 0, 0, Math.PI * 2);
     ctx.clip();
     
     // Draw brain background with proper aspect ratio
@@ -195,7 +213,8 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
 
     //set brain oval image global size for heatmap coverage size
 
-    drawHeatmap();
+    const currentGrid = createUpdatedGrid(brainData);
+    drawHeatmap(currentGrid);
 
     // Draw scanner if loaded and scanning
     if (scannerImage && isScanning) {
@@ -249,6 +268,13 @@ export default function CortexCanvas({ brainData, gridSize, updateThrottle = 100
       }
     };
   }, [brainData, scannerPos, isScanning, brainImage, scannerImage]);
+
+  // useEffect(()=>{
+  //   document.onclick = () => {
+  //     const currentGrid = createUpdatedGrid(brainData);
+  //     drawHeatmap(currentGrid);
+  //   }
+  // })
 
   return (
     <div className="relative">
