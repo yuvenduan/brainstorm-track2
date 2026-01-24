@@ -74,6 +74,7 @@ class GroupRealtimeProcessor:
         temporal_frames: int = 10,
         gaussian_sigma: float = 0.9,
         output_band: str = "high_gamma",
+        use_log_power: bool = False,
         verbose: bool = False,
     ):
         self.source_url = source_url
@@ -82,6 +83,7 @@ class GroupRealtimeProcessor:
         self.temporal_frames = max(1, min(20, temporal_frames))  # Clamp to [1, 20]
         self.gaussian_sigma = gaussian_sigma
         self.output_band = output_band
+        self.use_log_power = use_log_power
         self.verbose = verbose
 
         # State
@@ -413,7 +415,9 @@ class GroupRealtimeProcessor:
 
         self.is_calibrated = True
         console.print("[green]✓ Calibration complete, starting real-time processing[/green]")
-        console.print(f"[cyan]Streaming {self.output_band.replace('_', ' ').title()} band with log-power features[/cyan]")
+
+        feature_type = "log-power features" if self.use_log_power else "Hilbert envelope"
+        console.print(f"[cyan]Streaming {self.output_band.replace('_', ' ').title()} band with {feature_type}[/cyan]")
         console.print()
 
     def design_notch_filter(self):
@@ -500,16 +504,18 @@ class GroupRealtimeProcessor:
 
     def extract_band_features_batch(self, batch: np.ndarray, band_name: str) -> np.ndarray:
         """
-        Extract log-power features for a frequency band using causal filtering.
+        Extract features for a frequency band using causal filtering.
 
-        Pipeline: bandpass → Hilbert envelope → square → log(power + eps)
+        Pipeline:
+        - If use_log_power: bandpass → Hilbert envelope → square → log(power + eps)
+        - Else: bandpass → Hilbert envelope (amplitude)
 
         Args:
             batch: Array of shape (batch_size, 1024)
             band_name: Name of frequency band
 
         Returns:
-            Log-power features, same shape as input
+            Extracted features, same shape as input
         """
         from scipy.signal import hilbert, lfilter, lfilter_zi
 
@@ -541,11 +547,14 @@ class GroupRealtimeProcessor:
             analytic = hilbert(filtered)
             envelope = np.abs(analytic)
 
-            # Square and log transform
-            power = envelope ** 2
-            log_power = np.log(power + 1e-12)
-
-            features_batch[:, ch] = log_power
+            if self.use_log_power:
+                # Square and log transform
+                power = envelope ** 2
+                log_power = np.log(power + 1e-12)
+                features_batch[:, ch] = log_power
+            else:
+                # Just use envelope (amplitude)
+                features_batch[:, ch] = envelope
 
         return features_batch
 
@@ -567,11 +576,14 @@ class GroupRealtimeProcessor:
             analytic = hilbert(filtered)
             envelope = np.abs(analytic)
 
-            # Square and log
-            power = envelope ** 2
-            log_power = np.log(power + 1e-12)
-
-            features[:, ch] = log_power
+            if self.use_log_power:
+                # Square and log
+                power = envelope ** 2
+                log_power = np.log(power + 1e-12)
+                features[:, ch] = log_power
+            else:
+                # Just use envelope (amplitude)
+                features[:, ch] = envelope
 
         return features
 
@@ -736,6 +748,11 @@ def main(
         "-b",
         help="Frequency band to output (theta_alpha, beta, low_gamma, high_gamma)",
     ),
+    log_power: bool = typer.Option(
+        False,
+        "--log-power/--no-log-power",
+        help="Apply log-power transform on top of Hilbert envelope",
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose",
@@ -790,6 +807,7 @@ def main(
     table.add_row("Temporal Smoothing", f"{temporal_frames} frames")
     table.add_row("Gaussian Sigma", f"{gaussian_sigma:.2f}")
     table.add_row("Output Band", output_band.replace("_", " ").title())
+    table.add_row("Feature Type", "Log-Power" if log_power else "Hilbert Envelope")
     table.add_row("Output Range", "[-0.02, +0.02]")
     console.print(table)
     console.print()
@@ -802,6 +820,7 @@ def main(
         temporal_frames=temporal_frames,
         gaussian_sigma=gaussian_sigma,
         output_band=output_band,
+        use_log_power=log_power,
         verbose=verbose,
     )
 
