@@ -104,3 +104,51 @@
     --mip-stride 250 \                                                                                    
     --n-std 3.0 \                                                                                         
     --verbose  
+
+
+      Open your browser and go to:                                                                            
+  http://localhost:8000                                                                                   
+                                                                                                          
+  The app is already configured to connect to ws://localhost:8766 (the processor).                        
+                                                                                                          
+  Just click the Connect button and you should see the processed neural data stream with:                 
+  - ✅ 4 bad channels ([51, 232, 419, 582]) being imputed                                                 
+  - ✅ 3x3 spatial smoothing applied                                                                      
+  - ✅ Full temporal resolution (no time averaging)                                                       
+                                                                                                          
+  Current Setup                                                                                           
+                                                                                                          
+  Data Stream (ws://localhost:8765)                                                                       
+           ↓                                                                                              
+      Processor (ws://localhost:8766)                                                                     
+      - Detects & fixes 4 bad channels                                                                    
+      - Applies 3x3 median filter                                                                         
+           ↓                                                                                              
+      Web App (http://localhost:8000)                
+
+
+  Commit Summary                                                                                          
+                                                                                                          
+  Commit: a1272a2                                                                                         
+  Branch: candy                                                                                           
+  Status: Pushed to origin                                                                                
+                                                                                                          
+  Files Changed:                                                                                          
+                                                                                                          
+  - ✅ scripts/process_stream.py (new) - Real-time processing pipeline                                    
+  - ✅ docs/realtime_processing.md (new) - Documentation                                                  
+  - ✅ example_app/app.js (modified) - Updated colormap range to [-0.2, +0.25]                            
+  - ✅ example_app/index.html (modified) - Updated server URL to port 8766 and colorbar labels            
+                                                                                                          
+  What Was Committed:                                                                                     
+                                                                                                          
+  Real-time high gamma (70-150Hz) processing pipeline with:                                               
+  - Bad channel detection and imputation                                                                  
+  - Bandpass filtering with Hilbert envelope extraction                                                   
+  - Standardization and normalization                                                                     
+  - Min-max scaling for full colormap utilization                                                         
+  - Spatial smoothing with 3x3 median filter                                                              
+  - Stateful causal filtering for continuous processing                                                   
+                                                                                                          
+  The processor is now live and streaming processed data from port 8766!                                                       
+                                                                                                    
