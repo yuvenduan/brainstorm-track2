@@ -1,8 +1,10 @@
 'use client';
 
+//Only make necessary changes to add an arrow instead of the cursor aiming for the hotspots identified in the heatmaps i have on the side so the
+
 import { useState, useEffect, useRef } from 'react';
 import NeuralCanvas from '@/components/NeuralCanvas';
-import CortexCanvas from '@/components/CortexCanvas';
+import {CortexCanvas} from '@/components/CortexCanvas';
 import StatusBar from '@/components/StatusBar';
 import ConnectionControls from '@/components/ConnectionControls';
 
@@ -133,6 +135,8 @@ export default function Home() {
   const [fps, setFps] = useState(0);
   const [channelCount, setChannelCount] = useState(0);
   const [currentNeuralData, setCurrentNeuralData] = useState<number[] | null>(null);
+  const [scannerX, setScannerX] = useState(0);
+  const [scannerY, setScannerY] = useState(0);
 
   const sampleBufferRef = useRef<number[][]>([]);
   const timeBufferRef = useRef<number[]>([]);
@@ -291,27 +295,39 @@ export default function Home() {
     }
   };
 
-  useEffect(()=>{
-    document.addEventListener("keypress", function(event){
-      if (event.key==="ArrowUp"){
-
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      console.log('Key pressed:', event.key, event.code);
+      const adjust = 10;
+      if (event.key === "ArrowUp") {
+        console.log('ArrowUp detected, moving scanner up');
+        setScannerY(prev => prev - adjust);
+      } if (event.key === "ArrowUp") {
+        setScannerY(prev => prev - adjust);
       }
-      if (event.key==="ArrowDown"){
-
+      if (event.key === "ArrowDown") {
+        setScannerY(prev => prev + adjust);
       }
-      if (event.key==="ArrowLeft"){
-
+      if (event.key === "ArrowLeft") {
+        setScannerX(prev => prev - adjust);
       }
-      if (event.key==="ArrowRight"){
-
+      if (event.key === "ArrowRight") {
+        setScannerX(prev => prev + adjust);
       }
-    })
-  })
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Cleanup function
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []); // Empty dependency array - only run once
 
   return (
     <main className="w-screen h-screen bg-white">
       <div className="flex flex-col items-center w-full h-full pt-6" style={{
-        boxShadow: "0px 0px 70px 0px red inset"
+        /* boxShadow: "0px 0px 70px 0px red inset" */
       }}>
         {/*
         <header className="flex justify-between items-center pb-5 border-b border-border mb-6">
@@ -333,34 +349,36 @@ export default function Home() {
           <div className="flex flex-col items-center  p-6 rounded-xl">
             <h2 className="text-lg font-semibold text-primary-bg mb-4 text-center">Brain Scan Visualization</h2>
             <br/>
-            <CortexCanvas
-              brainData={convertNeuralToBrainData()}
-              gridSize={gridSize}
-              updateThrottle={200} // Update every 200ms when not scanning
-            />
+            {/* Neural Canvas */}
+            <div className="flex gap-5">
+              <NeuralCanvas
+                  channelsCoords={channelsCoords}
+                  gridSize={gridSize}
+                  valueToColor={valueToColor}
+                  currentNeuralData={currentNeuralData}
+              />
+              {/* right meter */}
+              <div className="flex gap-2 py-2">
+                <div className="w-4 rounded bg-gradient-to-b from-[#fcfdbf] via-[#feca8d] via-[#f1605d] via-[#b73779] via-[#721f81] to-[#2c115f] to-[#000004]"></div>
+                <div className="flex flex-col justify-between text-xs text-text-secondary">
+                  <span>+0.02</span>
+                  <span>0.0</span>
+                  <span>-0.02</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col items-center bg-gray-200 p-6 rounded-lg">
             <div className="z-50">
               <div className="flex flex-col md:flex-row gap-6 justify-center items-center py-5">
-                {/* Neural Canvas */}
-                <div className="flex gap-5">
-                  <NeuralCanvas
-                      channelsCoords={channelsCoords}
-                      gridSize={gridSize}
-                      valueToColor={valueToColor}
-                      currentNeuralData={currentNeuralData}
-                  />
-                  {/* right meter */}
-                  <div className="flex gap-2 py-2">
-                    <div className="w-4 rounded bg-gradient-to-b from-[#fcfdbf] via-[#feca8d] via-[#f1605d] via-[#b73779] via-[#721f81] to-[#2c115f] to-[#000004]"></div>
-                    <div className="flex flex-col justify-between text-xs text-text-secondary">
-                      <span>+0.02</span>
-                      <span>0.0</span>
-                      <span>-0.02</span>
-                    </div>
-                  </div>
-                </div>
+                <CortexCanvas
+                    brainData={convertNeuralToBrainData()}
+                    gridSize={gridSize}
+                    updateThrottle={200} // Update every 200ms when not scanning
+                    scannerOffsetX={scannerX}
+                    scannerOffsetY={scannerY}
+                />
               </div>
             </div>
             <ConnectionControls

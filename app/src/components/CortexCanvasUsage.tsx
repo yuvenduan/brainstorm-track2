@@ -1,6 +1,6 @@
 // Example usage in your page.tsx or parent component
 
-import CortexCanvas from '@/components/CortexCanvas';
+import {CortexCanvas} from '@/components/CortexCanvas';
 
 // Convert neural data to brain activity data format
 const convertNeuralToBrainData = (neuralData: number[] | null, channelsCoords: any[] | null) => {

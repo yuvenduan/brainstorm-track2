@@ -22,7 +22,7 @@ export default function NeuralCanvas({
   currentNeuralData
 }: NeuralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const canvasSize = 400;
+  const canvasSize = 600;
   const channelSize = (canvasSize*0.7) / gridSize;
 
   const getChannelPosition = (coord: ChannelCoord) => {
