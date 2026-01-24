@@ -57,3 +57,9 @@ Thumbs.db
 /app/.next
 /app/node_modules
 /app/next-env.d.ts
+
+new.sh
+
+*.gif
+*.pth
+*_new.py
