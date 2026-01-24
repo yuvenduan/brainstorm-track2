@@ -90,6 +90,7 @@
  Export to MP4                                       
 
    uv run python scripts/export_video.py -d super_easy -o /store1/candy/bci/super_easy.mp4 --verbose       
+                                                                         
                                                                                                           
   Full options available:                                                                                 
   uv run python scripts/export_video.py \                                                                 

@@ -57,3 +57,4 @@ Thumbs.db
 /app/.next
 /app/node_modules
 /app/next-env.d.ts
+output/
