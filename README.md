@@ -140,3 +140,32 @@ See [Submissions](docs/submissions.md) for detailed instructions.
 - Prioritize clarity over complexity
 - Think like a surgeon, not a researcher
 - Make it readable from 6 feet away
+
+## Usage
+```
+Web Visualization                                                                                       
+                                                                                                          
+  Update your web app to connect to ws://localhost:8888 (new port):                                       
+                                                                                                          
+  // In browser or update index.html default                                                              
+  document.getElementById('server-url').value = 'ws://localhost:8888';                                    
+                                                                                                          
+  Then open http://localhost:8001 and click Connect.                                                      
+                                                                                                          
+  You'll see:                                                                                             
+  - Neural activity heatmap (magma colormap, ±0.02 range)                                                 
+  - Pale yellow arrow (6px thick) tracking 20-frame EMA'd center of mass                                  
+  - Real-time updates at ~30 FPS                                                                          
+                                                                                                          
+  ---                                                                                                     
+  Stop and Save                                                                                           
+                                                                                                          
+  Press Ctrl+C to stop gracefully:                                                                        
+  ^C                                                                                                      
+  Stopped by user                                                                                         
+  ✓ Saved 3413 center of mass values to: output/center_of_mass.csv                                        
+                                                                                                          
+  Both CSV files will be in the output/ directory:                                                        
+  - output/bad_channels.csv - Detected during calibration                                                 
+  - output/center_of_mass.csv - Saved on exit
+```
