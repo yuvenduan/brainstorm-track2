@@ -126,6 +126,9 @@ class GroupRealtimeProcessor:
         # Center of mass tracking
         self.center_of_mass_history = []  # List of (time, row, col) tuples
         self.current_com = None  # Current center of mass (row, col)
+        self.ema_com = None  # EMA smoothed center of mass (row, col)
+        self.com_ema_frames = 50  # Number of frames for EMA smoothing
+        self.com_alpha = 2.0 / (self.com_ema_frames + 1)  # EMA smoothing factor
 
     # =========================================================================
     # Server: Send processed data to clients
@@ -224,13 +227,27 @@ class GroupRealtimeProcessor:
             last_frame = processed_data[-1]  # Last sample in batch
             last_time = start_time_s + (sample_count - 1) / self.fs
             com_row, com_col = self.compute_center_of_mass(last_frame)
-            self.current_com = (com_row, com_col)
+
+            # Apply EMA smoothing (50-frame exponential moving average)
+            if self.ema_com is None:
+                # Initialize EMA with first value
+                self.ema_com = (com_row, com_col)
+            else:
+                # Update EMA: new_value = alpha * current + (1 - alpha) * previous
+                ema_row = self.com_alpha * com_row + (1 - self.com_alpha) * self.ema_com[0]
+                ema_col = self.com_alpha * com_col + (1 - self.com_alpha) * self.ema_com[1]
+                self.ema_com = (ema_row, ema_col)
+
+            # Use EMA'd CoM for display and broadcasting
+            self.current_com = self.ema_com
+
+            # Save raw CoM to history (for analysis)
             self.center_of_mass_history.append((last_time, com_row, com_col))
 
-            # Print to terminal
+            # Print EMA'd CoM to terminal
             console.print(
-                f"[yellow]CoM:[/yellow] t={last_time:.3f}s, "
-                f"row={com_row:.2f}, col={com_col:.2f}"
+                f"[yellow]CoM (EMA):[/yellow] t={last_time:.3f}s, "
+                f"row={self.ema_com[0]:.2f}, col={self.ema_com[1]:.2f}"
             )
         else:
             self.current_com = None
@@ -244,7 +261,7 @@ class GroupRealtimeProcessor:
             "fs": self.fs,
         }
 
-        # Add center of mass if available
+        # Add center of mass if available (EMA smoothed)
         if self.current_com is not None:
             output_msg["center_of_mass"] = {
                 "row": float(self.current_com[0]),
