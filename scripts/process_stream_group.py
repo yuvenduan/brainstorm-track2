@@ -386,6 +386,9 @@ class GroupRealtimeProcessor:
             bad_indices = np.where(self.bad_mask)[0].tolist()
             console.print(f"[yellow]Bad channels detected:[/yellow] {bad_indices}")
 
+            # Save bad channels to CSV
+            self.save_bad_channels_csv(bad_indices)
+
         # Step 2: Impute bad channels in calibration data
         if self.bad_mask is not None and self.bad_mask.any():
             for i in range(len(calibration_data)):
@@ -760,6 +763,31 @@ class GroupRealtimeProcessor:
 
         return (float(com_row), float(com_col))
 
+    def save_bad_channels_csv(self, bad_indices: list[int], output_path: str = "output/bad_channels.csv"):
+        """
+        Save bad channel indices to CSV file.
+
+        Args:
+            bad_indices: List of bad channel indices
+            output_path: Path to save CSV file
+        """
+        import csv
+        from pathlib import Path
+
+        # Create output directory if needed
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+        # Write CSV
+        with open(output_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['channel_index', 'grid_row', 'grid_col'])
+            for idx in bad_indices:
+                row = idx // GRID_SIZE
+                col = idx % GRID_SIZE
+                writer.writerow([idx, row, col])
+
+        console.print(f"[green]✓[/green] Saved {len(bad_indices)} bad channels to: {output_path}")
+
     def save_center_of_mass_csv(self, output_path: str = "output/center_of_mass.csv"):
         """
         Save center of mass history to CSV file.
@@ -812,13 +840,13 @@ class GroupRealtimeProcessor:
 @app.command()
 def main(
     source_url: str = typer.Option(
-        "ws://localhost:8765",
+        "ws://192.168.1.152:8080/stream",
         "--source",
         "-s",
         help="Source WebSocket URL to read from",
     ),
     output_port: int = typer.Option(
-        8766,
+        8888,
         "--port",
         "-p",
         help="Port to serve processed stream on",
@@ -877,7 +905,7 @@ def main(
         # Start processor (in another terminal)
         python scripts/process_stream_group.py --temporal-frames 10
 
-        # Connect your web app to ws://localhost:8766
+        # Connect your web app to ws://localhost:8888
     """
     # Validate output band
     if output_band not in BAND_NAMES:
