@@ -75,6 +75,7 @@ class GroupRealtimeProcessor:
         gaussian_sigma: float = 0.9,
         output_band: str = "high_gamma",
         use_log_power: bool = False,
+        track_center_of_mass: bool = False,
         verbose: bool = False,
     ):
         self.source_url = source_url
@@ -84,6 +85,7 @@ class GroupRealtimeProcessor:
         self.gaussian_sigma = gaussian_sigma
         self.output_band = output_band
         self.use_log_power = use_log_power
+        self.track_center_of_mass = track_center_of_mass
         self.verbose = verbose
 
         # State
@@ -120,6 +122,10 @@ class GroupRealtimeProcessor:
         # Stats
         self.frames_processed = 0
         self.samples_processed = 0
+
+        # Center of mass tracking
+        self.center_of_mass_history = []  # List of (time, row, col) tuples
+        self.current_com = None  # Current center of mass (row, col)
 
     # =========================================================================
     # Server: Send processed data to clients
@@ -213,6 +219,22 @@ class GroupRealtimeProcessor:
         # Update stats
         self.samples_processed += sample_count
 
+        # Compute center of mass from last frame if tracking enabled
+        if self.track_center_of_mass and self.is_calibrated:
+            last_frame = processed_data[-1]  # Last sample in batch
+            last_time = start_time_s + (sample_count - 1) / self.fs
+            com_row, com_col = self.compute_center_of_mass(last_frame)
+            self.current_com = (com_row, com_col)
+            self.center_of_mass_history.append((last_time, com_row, com_col))
+
+            # Print to terminal
+            console.print(
+                f"[yellow]CoM:[/yellow] t={last_time:.3f}s, "
+                f"row={com_row:.2f}, col={com_col:.2f}"
+            )
+        else:
+            self.current_com = None
+
         # Rebroadcast processed data
         output_msg = {
             "type": "sample_batch",
@@ -221,6 +243,14 @@ class GroupRealtimeProcessor:
             "sample_count": sample_count,
             "fs": self.fs,
         }
+
+        # Add center of mass if available
+        if self.current_com is not None:
+            output_msg["center_of_mass"] = {
+                "row": float(self.current_com[0]),
+                "col": float(self.current_com[1]),
+            }
+
         await self.broadcast(output_msg)
 
         # Verbose logging
@@ -683,6 +713,58 @@ class GroupRealtimeProcessor:
 
         return neighbors
 
+    def compute_center_of_mass(self, sample: np.ndarray) -> tuple[float, float]:
+        """
+        Compute intensity-weighted center of mass from a processed sample.
+
+        Args:
+            sample: Array of shape (1024,) with processed values in [-0.02, +0.02]
+
+        Returns:
+            Tuple of (row, col) in grid coordinates [0, 31]
+        """
+        # Reshape to grid
+        grid = sample.reshape(GRID_SIZE, GRID_SIZE)
+
+        # Shift values to be non-negative for weighting
+        # Map [-0.02, +0.02] -> [0, 0.04]
+        weights = grid - np.min(grid)
+
+        # Avoid division by zero
+        total_weight = np.sum(weights)
+        if total_weight < 1e-10:
+            # Return center if no activity
+            return (GRID_SIZE / 2.0, GRID_SIZE / 2.0)
+
+        # Compute center of mass
+        rows, cols = np.indices((GRID_SIZE, GRID_SIZE))
+        com_row = np.sum(rows * weights) / total_weight
+        com_col = np.sum(cols * weights) / total_weight
+
+        return (float(com_row), float(com_col))
+
+    def save_center_of_mass_csv(self, output_path: str = "output/center_of_mass.csv"):
+        """
+        Save center of mass history to CSV file.
+
+        Args:
+            output_path: Path to save CSV file
+        """
+        import csv
+        from pathlib import Path
+
+        # Create output directory if needed
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+        # Write CSV
+        with open(output_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['time_s', 'com_row', 'com_col'])
+            for time_s, row, col in self.center_of_mass_history:
+                writer.writerow([f'{time_s:.6f}', f'{row:.6f}', f'{col:.6f}'])
+
+        console.print(f"[green]✓[/green] Saved {len(self.center_of_mass_history)} center of mass values to: {output_path}")
+
     # =========================================================================
     # Main Loop
     # =========================================================================
@@ -753,6 +835,11 @@ def main(
         "--log-power/--no-log-power",
         help="Apply log-power transform on top of Hilbert envelope",
     ),
+    track_com: bool = typer.Option(
+        False,
+        "--track-com",
+        help="Track and save center of mass to CSV",
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose",
@@ -808,6 +895,7 @@ def main(
     table.add_row("Gaussian Sigma", f"{gaussian_sigma:.2f}")
     table.add_row("Output Band", output_band.replace("_", " ").title())
     table.add_row("Feature Type", "Log-Power" if log_power else "Hilbert Envelope")
+    table.add_row("Track Center of Mass", "Yes" if track_com else "No")
     table.add_row("Output Range", "[-0.02, +0.02]")
     console.print(table)
     console.print()
@@ -821,6 +909,7 @@ def main(
         gaussian_sigma=gaussian_sigma,
         output_band=output_band,
         use_log_power=log_power,
+        track_center_of_mass=track_com,
         verbose=verbose,
     )
 
@@ -830,6 +919,10 @@ def main(
     except KeyboardInterrupt:
         console.print()
         console.print("[yellow]Stopped by user[/yellow]")
+    finally:
+        # Save center of mass data if tracking was enabled
+        if track_com and len(processor.center_of_mass_history) > 0:
+            processor.save_center_of_mass_csv()
 
 
 if __name__ == "__main__":
