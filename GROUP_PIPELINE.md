@@ -187,3 +187,7 @@ Streaming High Gamma band with log-power features
 
 Client connected (total: 1)
 ```
+
+
+  The processor is now streaming High Gamma band log-power features in real-time with all preprocessing applied (bad channel imputation → 60Hz notch → bandpass → Hilbert → square → log → Gaussian spatial smooth → temporal smooth → normalization → min-max stretch)
+  

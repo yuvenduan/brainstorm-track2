@@ -37,9 +37,9 @@ let canvasHeight = 600;
 let channelSize = 14;
 
 // Value range for colormap
-// High gamma band (70-150Hz) stretched to [-0.2, +0.25] via min-max scaling
-let vMin = -0.2;
-let vMax = 0.25;
+// Group pipeline output range after min-max scaling
+let vMin = -0.02;
+let vMax = 0.02;
 
 /**
  * Generate the magma colormap as an array of [r, g, b] values.

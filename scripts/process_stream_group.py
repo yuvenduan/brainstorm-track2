@@ -283,37 +283,37 @@ class GroupRealtimeProcessor:
         # Apply bandpass → Hilbert → square → log for the selected band
         band_features = self.extract_band_features_batch(processed, self.output_band)
 
-        # Step 4-9: Per-sample processing (spatial → temporal → normalize → stretch)
+        # Step 4-9: Per-sample processing (normalize → spatial → temporal → stretch)
+        median_val = self.band_medians[self.output_band]
+        std_val = self.band_stds[self.output_band]
+        old_min = self.band_mins[self.output_band]
+        old_max = self.band_maxs[self.output_band]
+        new_min = -0.02
+        new_max = 0.02
+        old_range = old_max - old_min
+
         output_batch = np.zeros_like(processed)
         for i in range(len(band_features)):
             sample = band_features[i]  # Shape: (1024,)
 
-            # Step 4: Reshape to grid for spatial processing
-            grid = sample.reshape(GRID_SIZE, GRID_SIZE)
+            # Step 4: Normalize (median + std) - BEFORE smoothing
+            normalized = (sample - median_val) / std_val
 
-            # Step 5: Gaussian spatial smoothing
+            # Step 5: Reshape to grid for spatial processing
+            grid = normalized.reshape(GRID_SIZE, GRID_SIZE)
+
+            # Step 6: Gaussian spatial smoothing
             smoothed_grid = self.gaussian_smooth(grid)
 
-            # Step 6: Temporal smoothing (accumulate in buffer)
+            # Step 7: Temporal smoothing (accumulate in buffer)
             self.temporal_buffer.append(smoothed_grid)
             temporal_avg = np.mean(self.temporal_buffer, axis=0)
 
-            # Step 7: Normalize (median + std)
-            median_val = self.band_medians[self.output_band]
-            std_val = self.band_stds[self.output_band]
-            normalized = (temporal_avg - median_val) / std_val
-
             # Step 8: Min-max stretch to [-0.02, +0.02]
-            old_min = self.band_mins[self.output_band]
-            old_max = self.band_maxs[self.output_band]
-            new_min = -0.02
-            new_max = 0.02
-
-            old_range = old_max - old_min
             if old_range > 1e-10:
-                stretched = new_min + (normalized - old_min) / old_range * (new_max - new_min)
+                stretched = new_min + (temporal_avg - old_min) / old_range * (new_max - new_min)
             else:
-                stretched = np.zeros_like(normalized)
+                stretched = np.zeros_like(temporal_avg)
 
             # Clip to ensure bounds
             stretched = np.clip(stretched, new_min, new_max)
