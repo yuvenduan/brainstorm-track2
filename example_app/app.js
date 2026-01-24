@@ -22,6 +22,9 @@ let currentFps = 0;
 // Time tracking
 let currentTime = 0.0;
 
+// Center of mass tracking
+let currentCenterOfMass = null; // {row, col} or null
+
 // Sample accumulation for frame rate reduction
 let sampleBuffer = [];
 let timeBuffer = [];
@@ -37,7 +40,7 @@ let canvasHeight = 600;
 let channelSize = 14;
 
 // Value range for colormap
-// Raw neural signals have small amplitude - use a tighter range to show variations
+// Group pipeline output range after min-max scaling
 let vMin = -0.02;
 let vMax = 0.02;
 
@@ -230,6 +233,11 @@ function renderNeuralData(neuralData, timeS) {
         ctx.fill();
     }
 
+    // Draw center of mass arrow if available
+    if (currentCenterOfMass) {
+        drawCenterOfMassArrow(currentCenterOfMass);
+    }
+
     // Update FPS counter
     frameCount++;
     const now = performance.now();
@@ -239,6 +247,49 @@ function renderNeuralData(neuralData, timeS) {
         lastFpsUpdate = now;
         document.getElementById('fps-counter').textContent = `${currentFps} FPS`;
     }
+}
+
+/**
+ * Draw arrow from grid center [16, 16] to center of mass.
+ */
+function drawCenterOfMassArrow(com) {
+    const padding = 30;
+    const plotSize = Math.min(canvasWidth, canvasHeight) - 2 * padding;
+
+    // Center position (grid coordinates [16, 16] -> 1-indexed [17, 17])
+    const centerX = 16 / (gridSize - 1) * plotSize + padding;
+    const centerY = 16 / (gridSize - 1) * plotSize + padding;
+
+    // CoM position (0-indexed grid coords)
+    const comX = com.col / (gridSize - 1) * plotSize + padding;
+    const comY = com.row / (gridSize - 1) * plotSize + padding;
+
+    // Draw arrow
+    ctx.strokeStyle = '#FFF59D';  // Pale yellow
+    ctx.fillStyle = '#FFF59D';
+    ctx.lineWidth = 6;
+
+    // Arrow line
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(comX, comY);
+    ctx.stroke();
+
+    // Arrow head
+    const angle = Math.atan2(comY - centerY, comX - centerX);
+    const headLength = 15;
+    ctx.beginPath();
+    ctx.moveTo(comX, comY);
+    ctx.lineTo(
+        comX - headLength * Math.cos(angle - Math.PI / 6),
+        comY - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+        comX - headLength * Math.cos(angle + Math.PI / 6),
+        comY - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fill();
 }
 
 /**
@@ -325,6 +376,11 @@ function connect() {
                     const sampleCount = data.sample_count || neuralData.length;
                     const fs = data.fs || 500.0;
                     const dt = 1.0 / fs;
+
+                    // Update center of mass if present
+                    if (data.center_of_mass) {
+                        currentCenterOfMass = data.center_of_mass;
+                    }
 
                     // Add each sample to buffer
                     for (let i = 0; i < sampleCount; i++) {
