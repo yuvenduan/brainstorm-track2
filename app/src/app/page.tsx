@@ -7,6 +7,8 @@ import NeuralCanvas from '@/components/NeuralCanvas';
 import {CortexCanvas} from '@/components/CortexCanvas';
 import StatusBar from '@/components/StatusBar';
 import ConnectionControls from '@/components/ConnectionControls';
+import ThreeDemo from '@/components/ThreeDemo';
+import Brain3D from '@/components/Brain3D';
 
 interface ChannelCoord {
   x: number;
@@ -385,6 +387,11 @@ export default function Home() {
                 isConnected={isConnected}
                 onConnect={connect}
             />
+          </div>
+
+          <div className="flex flex-col items-center bg-gray-100 p-6 rounded-lg ml-6 gap-8">
+            <Brain3D channelsCoords={channelsCoords} currentNeuralData={currentNeuralData} />
+            <ThreeDemo />
           </div>
         </div>
       </div>
